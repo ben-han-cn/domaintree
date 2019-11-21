@@ -74,11 +74,6 @@ impl<T: Clone> Clone for DomainTree<T> {
     }
 }
 
-fn indent(depth: usize) {
-    const INDENT_FOR_EACH_DEPTH: usize = 5;
-    print!("{}", " ".repeat((depth * INDENT_FOR_EACH_DEPTH) as usize));
-}
-
 impl<T> DomainTree<T> {
     pub fn new() -> DomainTree<T> {
         DomainTree {
@@ -429,10 +424,6 @@ impl<T> DomainTree<T> {
         mut parent: NodePtr<T>,
     ) {
         while child.get_pointer() != *root && child.is_black() {
-            println!("after while");
-            debug_node("parent", parent);
-            debug_node("child", child);
-
             if !parent.is_null() && parent.down().get_pointer() == *root {
                 break;
             }
@@ -460,39 +451,22 @@ impl<T> DomainTree<T> {
                 }
             }
 
-            println!("<=============================");
-            println!("before swap");
-            self.dump(1);
             let mut ss1 = sibling.left();
             let mut ss2 = sibling.right();
             if parent.left() != child {
                 mem::swap(&mut ss1, &mut ss2);
             }
-            println!("after swap");
-            debug_node("sibling", sibling);
-            debug_node("ss1", ss1);
-            debug_node("ss2", ss2);
-
-            println!("before rotate");
-            self.dump(1);
-            println!("<=============================");
 
             if ss2.is_black() {
                 sibling.set_color(Color::Red);
                 ss1.set_color(Color::Black);
                 if parent.left() == child {
-                    println!("---> before right_rotate");
                     self.right_rotate(root, sibling);
                 } else {
-                    println!("---> before left_rotate");
                     self.left_rotate(root, sibling);
                 }
                 sibling = get_sibling(parent, child);
             }
-
-            println!("after rotate");
-            self.dump(1);
-            println!("=============================>");
 
             sibling.set_color(parent.get_color());
             parent.set_color(Color::Black);
@@ -574,17 +548,9 @@ impl<T> DomainTree<T> {
     }
 }
 
-fn debug_node<T>(prefix: &str, node: NodePtr<T>) {
-    if node.is_null() {
-        println!("{} is null", prefix);
-    } else {
-        println!(
-            "{} {} ({:?})",
-            prefix,
-            node.get_name().to_string(),
-            node.get_color()
-        );
-    }
+fn indent(depth: usize) {
+    const INDENT_FOR_EACH_DEPTH: usize = 5;
+    print!("{}", " ".repeat((depth * INDENT_FOR_EACH_DEPTH) as usize));
 }
 
 #[cfg(test)]
@@ -744,14 +710,14 @@ mod tests {
     #[test]
     fn test_rand_tree_insert_and_search() {
         use r53::RandNameGenerator;
-        for _ in 0..10 {
+        for _ in 0..20 {
             let gen = RandNameGenerator::new();
             test_insert_delete_batch(gen.take(1000).collect::<Vec<Name>>());
         }
     }
 
-    use std::collections::HashSet;
     pub fn test_insert_delete_batch(names: Vec<Name>) {
+        use std::collections::HashSet;
         let mut tree = DomainTree::<usize>::new();
         let mut duplicate_name_index = HashSet::new();
         for (i, name) in names.iter().enumerate() {
