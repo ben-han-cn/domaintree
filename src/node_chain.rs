@@ -70,8 +70,15 @@ impl<'a, T> NodeChain<'a, T> {
     }
 
     pub fn push(&mut self, node: NodePtr<T>) {
+        assert!(self.level_count < MAX_LABEL_COUNT as usize);
         self.nodes[self.level_count] = node;
         self.level_count += 1;
+    }
+
+    pub fn pop(&mut self) -> NodePtr<T> {
+        assert!(self.level_count > 0);
+        self.level_count -= 1;
+        self.nodes[self.level_count]
     }
 }
 
@@ -102,6 +109,12 @@ mod tests {
         assert_eq!(
             chain.get_absolute_name(&LabelSequence::from_str("a").unwrap()),
             Name::from_str("a.b.cn").unwrap()
+        );
+
+        chain.pop();
+        assert_eq!(
+            chain.get_absolute_name(&LabelSequence::from_str("a").unwrap()),
+            Name::from_str("a.cn").unwrap()
         );
     }
 }
